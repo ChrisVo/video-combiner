@@ -1,0 +1,56 @@
+#!/bin/bash
+
+# Script to combine multiple video files using ffmpeg
+# Usage: ./combine-videos video1.mp4 video2.mp4 video3.mp4 ...
+
+set -e
+
+# Check if at least 2 videos are provided
+if [ "$#" -lt 2 ]; then
+    echo "Error: At least 2 video files are required"
+    echo "Usage: $0 video1.mp4 video2.mp4 [video3.mp4 ...]"
+    exit 1
+fi
+
+# Check if ffmpeg is installed
+if ! command -v ffmpeg &> /dev/null; then
+    echo "Error: ffmpeg is not installed"
+    echo "Install it with: brew install ffmpeg"
+    exit 1
+fi
+
+# Validate that all input files exist
+for file in "$@"; do
+    if [ ! -f "$file" ]; then
+        echo "Error: File not found: $file"
+        exit 1
+    fi
+done
+
+# Create a temporary file list for ffmpeg
+TEMP_FILE=$(mktemp /tmp/video-list.XXXXXX.txt)
+trap "rm -f $TEMP_FILE" EXIT
+
+# Write each video file to the list in the format ffmpeg expects
+for file in "$@"; do
+    # Get absolute path to handle relative paths correctly
+    abs_path=$(cd "$(dirname "$file")" && pwd)/$(basename "$file")
+    echo "file '$abs_path'" >> "$TEMP_FILE"
+done
+
+# Generate output filename with timestamp
+OUTPUT="combined_$(date +%Y%m%d_%H%M%S).mp4"
+
+echo "Combining ${#} videos..."
+echo "Output file: $OUTPUT"
+
+# Combine videos using ffmpeg concat demuxer
+# This method re-encodes to ensure compatibility
+ffmpeg -f concat -safe 0 -i "$TEMP_FILE" -c copy "$OUTPUT"
+
+if [ $? -eq 0 ]; then
+    echo "✓ Successfully combined videos into: $OUTPUT"
+else
+    echo "✗ Error combining videos"
+    exit 1
+fi
