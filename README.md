@@ -9,7 +9,25 @@ A simple bash script to combine multiple video files using ffmpeg.
   brew install ffmpeg
   ```
 
+## Installation
+
+To make the script available system-wide, simply run:
+
+```bash
+./install.sh
+```
+
+This will install `combine-videos` to `/usr/local/bin` and you'll be able to use it from anywhere on your system.
+
 ## Usage
+
+After installation:
+
+```bash
+combine-videos video1.mp4 video2.mp4 video3.mp4 ...
+```
+
+Without installation (from this directory):
 
 ```bash
 ./combine-videos video1.mp4 video2.mp4 video3.mp4 ...
